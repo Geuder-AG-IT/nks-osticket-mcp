@@ -100,6 +100,7 @@ const TOOLS: ToolDef[] = [
       topicId: z.number().int().positive().optional().describe("New help topic id"),
       note: z.string().optional().describe("Internal note (staff-only, not emailed)"),
       noteTitle: z.string().optional().describe("Title for the internal note"),
+      staffId: z.number().int().positive().optional().describe("Agent the note is posted as (default: the configured API agent)"),
     },
   },
   {
@@ -111,6 +112,8 @@ const TOOLS: ToolDef[] = [
       response: z.string().min(1).describe("Reply body, sent to the customer"),
       title: z.string().optional().describe("Optional reply title"),
       alert: z.boolean().optional().describe("Email the user (default true)"),
+      staffId: z.number().int().positive().optional().describe("Agent the reply is sent as (default: the configured API agent)"),
+      replyTo: z.enum(["all", "user", "collabs"]).optional().describe("Recipients: all (owner + collaborators, default), user, collabs"),
     },
   },
   {
