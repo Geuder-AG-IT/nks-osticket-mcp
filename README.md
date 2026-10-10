@@ -1,43 +1,38 @@
 # NKS osTicket MCP
 
-A [Model Context Protocol](https://modelcontextprotocol.io/) server for
-[osTicket](https://osticket.com/). It lets AI agents (Claude, etc.) list,
-search, read, create, update, reply to and delete tickets, plus read stats,
-manage parent/child subtickets and download attachments.
+[![Version](https://img.shields.io/badge/version-1.1.0-orange.svg)](CHANGELOG.md)
+[![Node.js](https://img.shields.io/badge/Node.js-18+-339933.svg?logo=node.js&logoColor=white)](#requirements)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6.svg?logo=typescript&logoColor=white)](tsconfig.json)
+[![MCP](https://img.shields.io/badge/MCP-stdio-111827.svg)](https://modelcontextprotocol.io/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-It talks to the companion
-[NKS osTicket API plugin](https://github.com/nks-hub/nks-osticket-plugin),
-which exposes a single JSON endpoint inside osTicket.
+> A [Model Context Protocol](https://modelcontextprotocol.io/) server for [osTicket](https://osticket.com/). It lets AI agents (Claude, etc.) list, search, read, create, update, reply to and delete tickets, plus read stats, manage parent/child subtickets and download attachments.
 
-## Tools
+It talks to the companion [NKS osTicket API plugin](https://github.com/nks-hub/nks-osticket-plugin), which exposes a single JSON endpoint inside osTicket.
 
-| Tool | Purpose |
-|---|---|
-| `osticket_list_tickets` | List tickets (filter by status/department, paginated) |
-| `osticket_search_tickets` | Full-text search by subject |
-| `osticket_get_ticket` | One ticket with full message thread |
-| `osticket_get_stats` | Total / open / closed / overdue counts |
-| `osticket_list_statuses` | All ticket statuses |
-| `osticket_create_ticket` | Create a ticket |
-| `osticket_update_ticket` | Change status / due date / topic, add internal note |
-| `osticket_reply_ticket` | Post a customer-facing reply (emailed) |
-| `osticket_delete_ticket` | Delete a ticket (irreversible) |
-| `osticket_link_subticket` | Link child under parent |
-| `osticket_unlink_subticket` | Remove a child's parent link |
-| `osticket_get_children` | List a parent's children |
-| `osticket_get_parent` | Get a child's parent |
-| `osticket_download_attachment` | Download an attachment (base64) |
+---
+
+## Features
+
+- 🎫 **Ticket CRUD** - List, search, read, create, update and delete tickets from an AI agent
+- 💬 **Replies and notes** - Customer-facing replies (emailed) and internal notes, optionally posted as a specific agent (`staffId`) and with selectable recipients (`replyTo`)
+- 📊 **Stats and statuses** - Total, open, closed and overdue counts; list of all ticket statuses
+- 🌳 **Subtickets** - Link, unlink and browse parent/child tickets
+- 📎 **Attachments** - Thread entries list their attachments; download any of them as base64
+- ⏱️ **Safe HTTP client** - Typed, timeout-guarded client with clear error surfacing and optional self-signed TLS
+- 🧩 **14 tools** - One MCP server over stdio, configured by environment variables
 
 ## Requirements
 
-- Node.js ≥ 18
-- The NKS osTicket API plugin installed on your osTicket instance
-- An osTicket API key (Admin → Manage → API Keys) with the permissions your
-  tools need, bound to the source IP this server runs from
+- Node.js 18 or later
+- The [NKS osTicket API plugin](https://github.com/nks-hub/nks-osticket-plugin) installed on your osTicket instance
+- An osTicket API key (Admin → Manage → API Keys) with the permissions your tools need, bound to the source IP this server runs from
 
-## Install
+## Installation
 
 ```bash
+git clone https://github.com/nks-hub/nks-osticket-mcp.git
+cd nks-osticket-mcp
 npm install
 npm run build
 ```
@@ -53,7 +48,9 @@ Set via environment variables (see `.env.example`):
 | `NKS_OSTICKET_TIMEOUT_MS` | no | `30000` | Request timeout |
 | `NKS_OSTICKET_REJECT_UNAUTHORIZED` | no | `true` | `false` allows self-signed TLS |
 
-## Use with Claude Code / Claude Desktop
+## Usage
+
+### Claude Code / Claude Desktop
 
 Add to your MCP server configuration:
 
@@ -72,6 +69,57 @@ Add to your MCP server configuration:
 }
 ```
 
+### Tools
+
+| Tool | Purpose |
+|---|---|
+| `osticket_list_tickets` | List tickets (filter by status/department, paginated) |
+| `osticket_search_tickets` | Full-text search by subject |
+| `osticket_get_ticket` | One ticket with full message thread |
+| `osticket_get_stats` | Total / open / closed / overdue counts |
+| `osticket_list_statuses` | All ticket statuses |
+| `osticket_create_ticket` | Create a ticket |
+| `osticket_update_ticket` | Change status / due date / topic, add internal note (optionally as agent `staffId`) |
+| `osticket_reply_ticket` | Post a customer-facing reply (emailed; optional `staffId` and `replyTo`: `all`, `user`, `collabs`) |
+| `osticket_delete_ticket` | Delete a ticket (irreversible) |
+| `osticket_link_subticket` | Link child under parent |
+| `osticket_unlink_subticket` | Remove a child's parent link |
+| `osticket_get_children` | List a parent's children |
+| `osticket_get_parent` | Get a child's parent |
+| `osticket_download_attachment` | Download an attachment (base64) |
+
+## Development
+
+```bash
+npm run dev          # run from source with tsx
+npm run type-check   # tsc --noEmit
+npm run build        # compile to dist/
+npm start            # run the compiled server
+```
+
+The project has no automated test suite yet; `npm run type-check` and `npm run build` are the checks. Changes are listed in [CHANGELOG.md](CHANGELOG.md).
+
+## Contributing
+
+Contributions are welcome! For major changes, please open an issue first.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'feat: description'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## Support
+
+- 📧 **Email:** dev@nks-hub.cz
+- 🐛 **Bug reports:** [GitHub Issues](https://github.com/nks-hub/nks-osticket-mcp/issues)
+
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT License — see [LICENSE](LICENSE) for details.
+
+---
+
+<p align="center">
+  Made with ❤️ by <a href="https://github.com/nks-hub">NKS Hub</a>
+</p>
