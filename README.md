@@ -6,7 +6,7 @@
 [![MCP](https://img.shields.io/badge/MCP-stdio-111827.svg)](https://modelcontextprotocol.io/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-> A [Model Context Protocol](https://modelcontextprotocol.io/) server for [osTicket](https://osticket.com/). It lets AI agents (Claude, etc.) list, search, read, create, update, reply to and delete tickets, plus read stats, manage parent/child subtickets and download attachments.
+> A [Model Context Protocol](https://modelcontextprotocol.io/) server for [osTicket](https://osticket.com/). It lets AI agents such as Claude list, search, read, create, update, reply to and delete tickets, plus read stats, manage parent/child subtickets and download attachments.
 
 It talks to the companion [NKS osTicket API plugin](https://github.com/nks-hub/nks-osticket-plugin), which exposes a single JSON endpoint inside osTicket.
 
@@ -19,7 +19,7 @@ It talks to the companion [NKS osTicket API plugin](https://github.com/nks-hub/n
 - 📊 **Stats and statuses** - Total, open, closed and overdue counts; list of all ticket statuses
 - 🌳 **Subtickets** - Link, unlink and browse parent/child tickets
 - 📎 **Attachments** - Thread entries list their attachments; download any of them as base64
-- ⏱️ **Safe HTTP client** - Typed, timeout-guarded client with clear error surfacing and optional self-signed TLS
+- ⏱️ **Error reporting** - Requests time out after 30 s by default (504), network failures return 502, and API errors come back to the agent with osTicket's code and message; self-signed TLS can be allowed
 - 🧩 **14 tools** - One MCP server over stdio, configured by environment variables
 
 ## Requirements
@@ -45,7 +45,7 @@ Set via environment variables (see `.env.example`):
 |---|---|---|---|
 | `NKS_OSTICKET_URL` | yes | – | URL of the API entry, `…/api/nks-osticket.php` |
 | `NKS_OSTICKET_API_KEY` | yes | – | osTicket API key |
-| `NKS_OSTICKET_TIMEOUT_MS` | no | `30000` | Request timeout |
+| `NKS_OSTICKET_TIMEOUT_MS` | no | `30000` | Request timeout in ms |
 | `NKS_OSTICKET_REJECT_UNAUTHORIZED` | no | `true` | `false` allows self-signed TLS |
 
 ## Usage
