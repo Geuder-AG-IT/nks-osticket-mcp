@@ -1,6 +1,6 @@
 # NKS osTicket MCP
 
-[![Version](https://img.shields.io/badge/version-1.1.0-orange.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.2.0-orange.svg)](CHANGELOG.md)
 [![Node.js](https://img.shields.io/badge/Node.js-18+-339933.svg?logo=node.js&logoColor=white)](#requirements)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6.svg?logo=typescript&logoColor=white)](tsconfig.json)
 [![MCP](https://img.shields.io/badge/MCP-stdio-111827.svg)](https://modelcontextprotocol.io/)
@@ -18,7 +18,7 @@ It talks to the companion [NKS osTicket API plugin](https://github.com/nks-hub/n
 - 💬 **Replies and notes** - Customer-facing replies (emailed) and internal notes, optionally posted as a specific agent (`staffId`) and with selectable recipients (`replyTo`)
 - 📊 **Stats and statuses** - Total, open, closed and overdue counts; list of all ticket statuses
 - 🌳 **Subtickets** - Link, unlink and browse parent/child tickets
-- 📎 **Attachments** - Thread entries list their attachments; download any of them as base64
+- 📎 **Attachments** - Attach local files to a reply; thread entries list their attachments and any of them downloads as base64
 - ⏱️ **Error reporting** - Requests time out after 30 s by default (504), network failures return 502, and API errors come back to the agent with osTicket's code and message; self-signed TLS can be allowed
 - 🧩 **14 tools** - One MCP server over stdio, configured by environment variables
 
@@ -80,13 +80,15 @@ Add to your MCP server configuration:
 | `osticket_list_statuses` | All ticket statuses |
 | `osticket_create_ticket` | Create a ticket |
 | `osticket_update_ticket` | Change status / due date / topic, add internal note (optionally as agent `staffId`) |
-| `osticket_reply_ticket` | Post a customer-facing reply (emailed; optional `staffId` and `replyTo`: `all`, `user`, `collabs`) |
+| `osticket_reply_ticket` | Post a customer-facing reply (emailed; optional `staffId`, `replyTo`: `all`, `user`, `collabs`, and `attachments`) |
 | `osticket_delete_ticket` | Delete a ticket (irreversible) |
 | `osticket_link_subticket` | Link child under parent |
 | `osticket_unlink_subticket` | Remove a child's parent link |
 | `osticket_get_children` | List a parent's children |
 | `osticket_get_parent` | Get a child's parent |
 | `osticket_download_attachment` | Download an attachment (base64) |
+
+`attachments` on `osticket_reply_ticket` is a list of `{ "path": "C:/tmp/screenshot.jpg" }`, optionally with `name` and `type`. The server reads each file from its own disk, guesses the MIME type from the extension (jpg, png, gif, webp, pdf, txt, otherwise `application/octet-stream`) and sends it base64-encoded. Attaching files needs plugin 1.3.0 or later; osTicket's maximum file size setting caps each file.
 
 ## Development
 

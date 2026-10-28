@@ -5,6 +5,17 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.2.0] - 2026-10-28
+
+### Added
+- `osticket_reply_ticket` takes `attachments`, a list of `{path, name?, type?}`.
+  The server reads the files from its local disk and sends them base64-encoded
+  to the plugin's `tickets.reply` (needs plugin 1.3.0). A missing file returns
+  the read error instead of posting the reply.
+- `osticket_reply_ticket` and `osticket_update_ticket` take `staffId`, and
+  `osticket_reply_ticket` takes `replyTo` (`all`, `user`, `collabs`), matching
+  plugin 1.2.0.
+
 ## [1.1.0] - 2026-07-07
 
 ### Changed

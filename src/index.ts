@@ -7,6 +7,8 @@
  * the mapping lives in one table so tools stay consistent and easy to extend.
  */
 
+import { readFile } from "node:fs/promises";
+import { basename, extname } from "node:path";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z, type ZodRawShape } from "zod";
@@ -14,7 +16,7 @@ import { loadConfig } from "./config.js";
 import { OsticketClient, OsticketApiError } from "./client.js";
 
 const SERVER_NAME = "nks-osticket-mcp";
-const SERVER_VERSION = "1.1.0";
+const SERVER_VERSION = "1.2.0";
 
 /** One MCP tool bound to a single API action. */
 interface ToolDef {
@@ -22,6 +24,40 @@ interface ToolDef {
   description: string;
   action: string;
   shape: ZodRawShape;
+  /** Rewrites tool args into API params before the call. */
+  prepare?: (args: Record<string, unknown>) => Promise<Record<string, unknown>>;
+}
+
+const MIME_BY_EXT: Record<string, string> = {
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".png": "image/png",
+  ".gif": "image/gif",
+  ".webp": "image/webp",
+  ".pdf": "application/pdf",
+  ".txt": "text/plain",
+};
+
+interface AttachmentArg {
+  path: string;
+  name?: string;
+  type?: string;
+}
+
+/** Reads local files so the API gets `{name, type, data}` with base64 data. */
+async function loadAttachments(args: Record<string, unknown>): Promise<Record<string, unknown>> {
+  const list = args.attachments as AttachmentArg[] | undefined;
+  if (!list?.length) {
+    return args;
+  }
+  const attachments = await Promise.all(
+    list.map(async (a) => ({
+      name: a.name ?? basename(a.path),
+      type: a.type ?? MIME_BY_EXT[extname(a.path).toLowerCase()] ?? "application/octet-stream",
+      data: (await readFile(a.path)).toString("base64"),
+    })),
+  );
+  return { ...args, attachments };
 }
 
 const ticketRef = {
@@ -114,7 +150,18 @@ const TOOLS: ToolDef[] = [
       alert: z.boolean().optional().describe("Email the user (default true)"),
       staffId: z.number().int().positive().optional().describe("Agent the reply is sent as (default: the configured API agent)"),
       replyTo: z.enum(["all", "user", "collabs"]).optional().describe("Recipients: all (owner + collaborators, default), user, collabs"),
+      attachments: z
+        .array(
+          z.object({
+            path: z.string().min(1).describe("Local file path, read by this server"),
+            name: z.string().optional().describe("File name shown to the customer (default: file name from path)"),
+            type: z.string().optional().describe("MIME type (default: guessed from the extension)"),
+          }),
+        )
+        .optional()
+        .describe("Files attached to the reply and to its email. Each file is limited by osTicket's max_file_size."),
     },
+    prepare: loadAttachments,
   },
   {
     name: "osticket_delete_ticket",
@@ -182,7 +229,8 @@ async function main(): Promise<void> {
       { description: tool.description, inputSchema: tool.shape },
       async (args: Record<string, unknown>) => {
         try {
-          const data = await client.call(tool.action, args ?? {});
+          const params = tool.prepare ? await tool.prepare(args ?? {}) : (args ?? {});
+          const data = await client.call(tool.action, params);
           return textResult(data);
         } catch (err) {
           return errorResult(err);
