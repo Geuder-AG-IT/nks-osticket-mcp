@@ -5,6 +5,14 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.4.0] - 2026-11-10
+
+### Changed
+- `osticket_download_attachment` returns PNG, JPEG, GIF and WebP images up to
+  3.75 MB as MCP image content (plus the metadata as text), so the model sees
+  the screenshot instead of a base64 string. Other files and larger images
+  still come back as base64 JSON.
+
 ## [1.3.0] - 2026-10-30
 
 ### Added

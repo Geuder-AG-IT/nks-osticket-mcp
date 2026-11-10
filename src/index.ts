@@ -16,7 +16,7 @@ import { loadConfig } from "./config.js";
 import { OsticketClient, OsticketApiError } from "./client.js";
 
 const SERVER_NAME = "nks-osticket-mcp";
-const SERVER_VERSION = "1.3.0";
+const SERVER_VERSION = "1.4.0";
 
 /** One MCP tool bound to a single API action. */
 interface ToolDef {
@@ -26,6 +26,50 @@ interface ToolDef {
   shape: ZodRawShape;
   /** Rewrites tool args into API params before the call. */
   prepare?: (args: Record<string, unknown>) => Promise<Record<string, unknown>>;
+  /** Turns the API result into MCP content; defaults to JSON text. */
+  format?: (data: unknown) => ToolResult;
+}
+
+type ToolResult = {
+  content: (
+    | { type: "text"; text: string }
+    | { type: "image"; data: string; mimeType: string }
+  )[];
+  isError?: boolean;
+};
+
+/** Image types MCP clients can show to the model. */
+const IMAGE_MIME_TYPES = new Set(["image/png", "image/jpeg", "image/gif", "image/webp"]);
+
+/** Largest image (raw bytes) returned as image content; clients cap base64 near 5 MB. */
+const MAX_IMAGE_BYTES = 3_750_000;
+
+interface DownloadedAttachment {
+  fileId: number;
+  filename: string;
+  mimeType: string;
+  size: number;
+  encoding: string;
+  data: string;
+}
+
+/**
+ * Returns images as MCP image content so the model can see them,
+ * with the metadata as text. Everything else stays base64 JSON text.
+ */
+function attachmentResult(data: unknown): ToolResult {
+  const file = data as DownloadedAttachment;
+  const mimeType = String(file?.mimeType ?? "").toLowerCase();
+  if (!IMAGE_MIME_TYPES.has(mimeType) || !(file.size <= MAX_IMAGE_BYTES)) {
+    return textResult(data);
+  }
+  const { data: base64, ...meta } = file;
+  return {
+    content: [
+      { type: "text", text: JSON.stringify(meta, null, 2) },
+      { type: "image", data: base64, mimeType },
+    ],
+  };
 }
 
 const MIME_BY_EXT: Record<string, string> = {
@@ -213,13 +257,14 @@ const TOOLS: ToolDef[] = [
   {
     name: "osticket_download_attachment",
     description:
-      "Download a ticket attachment by its numeric file id (from a thread entry's attachments[].fileId in osticket_get_ticket), returned as base64.",
+      "Download a ticket attachment by its numeric file id (from a thread entry's attachments[].fileId in osticket_get_ticket). PNG, JPEG, GIF and WebP images up to 3.75 MB come back as an image you can see, plus their metadata; other files come back as base64 JSON.",
     action: "attachments.download",
     shape: { fileId: z.number().int().positive().describe("Attachment file id") },
+    format: attachmentResult,
   },
 ];
 
-function textResult(data: unknown) {
+function textResult(data: unknown): ToolResult {
   return { content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }] };
 }
 
@@ -245,7 +290,7 @@ async function main(): Promise<void> {
         try {
           const params = tool.prepare ? await tool.prepare(args ?? {}) : (args ?? {});
           const data = await client.call(tool.action, params);
-          return textResult(data);
+          return (tool.format ?? textResult)(data);
         } catch (err) {
           return errorResult(err);
         }

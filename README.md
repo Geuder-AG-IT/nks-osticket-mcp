@@ -87,7 +87,7 @@ Add to your MCP server configuration:
 | `osticket_unlink_subticket` | Remove a child's parent link |
 | `osticket_get_children` | List a parent's children |
 | `osticket_get_parent` | Get a child's parent |
-| `osticket_download_attachment` | Download an attachment (base64) |
+| `osticket_download_attachment` | Download an attachment: images (PNG, JPEG, GIF, WebP up to 3.75 MB) as image content, other files as base64 |
 
 `attachments` on `osticket_reply_ticket` is a list of `{ "path": "C:/tmp/screenshot.jpg" }`, optionally with `name` and `type`. The server reads each file from its own disk, guesses the MIME type from the extension (jpg, png, gif, webp, pdf, txt, otherwise `application/octet-stream`) and sends it base64-encoded. Attaching files needs plugin 1.3.0 or later; osTicket's maximum file size setting caps each file.
 
